@@ -1,20 +1,21 @@
 package menu;
 
+import model.Store;
 import model.User;
 import services.BuyService;
-import services.LoginService;
-import sun.rmi.runtime.Log;
 
 import java.io.IOException;
 import java.util.logging.Logger;
 
 public class BuyMenu extends AbstractMenu {
     private User user;
+    private Store store;
     private static final Logger loger = Logger.getLogger(Logger.class.getName());
 
 
-    public BuyMenu(User user) {
+    public BuyMenu(User user,Store store) {
         this.user = user;
+        this.store = store;
     }
 
     public void displayOption() {
@@ -24,18 +25,17 @@ public class BuyMenu extends AbstractMenu {
         System.out.println(" 0->Logout");
     }
 
-    public void executeOption(Integer option) throws IOException {
-        LoginService loginService = new LoginService();
-        BuyService buyService = new BuyService();
+    public void executeOption(Integer option)  throws IOException{
+        BuyService buyService = new BuyService(store,user);
         switch (option) {
             case 1:
-                loginService.displayAvailableProducts();
+                buyService.displayAvailableProducts();
                 break;
             case 2:
                 buyService.displayShopingCart();
                 break;
             case 3:
-                loginService.buyProduct();
+                buyService.buyProduct();
                 break;
             case 0:
                 loger.info("User " + user.getName() + " is successfully logged out!\n");

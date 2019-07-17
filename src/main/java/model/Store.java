@@ -1,7 +1,6 @@
 package model;
 
-import services.LoginService;
-
+import services.BuyService;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,6 +13,10 @@ public class Store {
         this.name = name;
         this.address = address;
         this.products = new HashMap<>();
+    }
+
+    public void updateQuantityForAProduct(String productStr, Integer newQuantity){
+        products.put(productStr,newQuantity);
     }
 
 
@@ -30,13 +33,17 @@ public class Store {
 
     public void buildProductList() {
 
-        LoginService loginService = new LoginService();
-        Map<Product, Integer> products = loginService.readAvailableProducts();
+        BuyService buyService = new BuyService();
+        Map<Product, Integer> products = buyService.readAvailableProducts();
         if (products.isEmpty()) {
             System.out.println("No products in store!");
         } else {
             for (Product product : products.keySet()) {
-                addAndCountProduct(product.getName());
+                int numberOfProduct = products.get(product);
+                while(numberOfProduct  > 0) {
+                    addAndCountProduct(product.getName());
+                    numberOfProduct--;
+                }
             }
         }
     }

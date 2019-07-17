@@ -9,10 +9,6 @@ public class ApplicationConst {
            "C:\\Users\\Halip\\IdeaProjects\\OnlineStore\\src\\main\\resources\\products.txt";
 
 
-
-
-    public static final int ACCOUNT_NAME_LENGTH = 10;
-    public static final String ACCOUNT_NAME_PREFIX = "RO";
-    public static final String FILE_ACCOUNTS_PATH_AUX =
+    public static final String FILE_PRODUCTS_PATH_AUX =
             "C:\\Users\\Halip\\IdeaProjects\\BanckProject\\src\\main\\resources\\accountsAux.txt";
 }

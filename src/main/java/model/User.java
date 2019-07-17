@@ -20,7 +20,7 @@ public class User {
 
     public void addAndCountProduct(String productToAdd) {
         Integer count = productsFromCart.get(productToAdd);
-        if (productToAdd == null) {
+        if (count == null) {
             count = 1;
         } else {
             count += 1;

@@ -2,9 +2,11 @@ package menu;
 
 import model.Store;
 import model.User;
+import services.BuyService;
 import services.LoginService;
 
 import java.io.IOException;
+import java.util.Scanner;
 import java.util.logging.Logger;
 
 public class LoginMenu extends AbstractMenu{
@@ -26,20 +28,43 @@ public class LoginMenu extends AbstractMenu{
     }
 
     protected void executeOption(Integer option) throws IOException {
-
         LoginService loginService = new LoginService(user);
+        BuyService buyService = new BuyService(store,user);
         switch (option) {
             case 1:
-                loginService.login(option);
+                Scanner scanner = new Scanner(System.in);
+                System.out.println("User: ");
+                String userId = scanner.nextLine();
+                System.out.println("Password: ");
+                String password = scanner.nextLine();
+
+                User user = loginService.loginUser(userId, password);
+                if (user == null) {
+                    loger.warning("UserId\\Password incorect!");
+                } else {
+                    loger.info("Hello, " + userId + "!");
+                    BuyMenu buyMenu = new BuyMenu(user,store);
+                    while (option != 0) {
+                        buyMenu.displayOption();
+                        System.out.println("Your option: ");
+                        option = scanner.nextInt();
+                        try {
+                            buyMenu.executeOption(option);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
                 break;
             case 2:
-                loginService.displayAvailableProducts();
+                buyService.displayAvailableProducts();
                 break;
             case 3:
-                loginService.displayShopingCart();
+                System.out.println("You have to login first, before start buying products!");
+
                 break;
             case 4:
-                loginService.buyProduct();
+                System.out.println("You have to login first, before start buying products!");
                 break;
             case 0:
                 loger.info("Exiting...");
