@@ -1,13 +1,15 @@
 package model;
 
 import services.BuyService;
+
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Store {
     private String name;
     private String address;
-    private Map<String, Integer> products;
+    private Map<Product, Integer> products;
 
     public Store(String name, String address) {
         this.name = name;
@@ -15,12 +17,27 @@ public class Store {
         this.products = new HashMap<>();
     }
 
-    public void updateQuantityForAProduct(String productStr, Integer newQuantity){
-        products.put(productStr,newQuantity);
+    public boolean doesTheProductExist(String productToCheck) {
+        for (Product product : products.keySet()) {
+            if (product.getName().equals(productToCheck)) return true;
+        }
+        System.out.println("The product does not exist!");
+        return false;
     }
 
+    public void updateQuantityForAProduct(Product product, Integer quntityToSubstract) {
+        Integer curretQuatity = products.get(product);
+        products.put(product, curretQuatity - quntityToSubstract);
+    }
 
-    public void addAndCountProduct(String productToAdd) {
+    public BigDecimal getPrice(String nameOfProduct) {
+        for (Product product : products.keySet()) {
+            if (product.getName().equals(nameOfProduct)) return product.getPrice();
+        }
+        return null;
+    }
+
+    public void addAndCountProduct(Product productToAdd) {
         Integer count = products.get(productToAdd);
         if (count == null) {
             count = 1;
@@ -30,26 +47,23 @@ public class Store {
         products.put(productToAdd, count);
     }
 
-
     public void buildProductList() {
-
         BuyService buyService = new BuyService();
-        Map<Product, Integer> products = buyService.readAvailableProducts();
+        setProducts(buyService.readAvailableProducts());
         if (products.isEmpty()) {
             System.out.println("No products in store!");
-        } else {
+        }/* else {
             for (Product product : products.keySet()) {
                 int numberOfProduct = products.get(product);
-                while(numberOfProduct  > 0) {
-                    addAndCountProduct(product.getName());
+                while (numberOfProduct > 0) {
+                    addAndCountProduct(product);
                     numberOfProduct--;
                 }
             }
-        }
+        }*/
     }
 
-
-    public void addProduct(String nameOfProduct, Integer quantity) {
+    public void addProduct(Product nameOfProduct, Integer quantity) {
         products.put(nameOfProduct, quantity);
     }
 
@@ -69,18 +83,17 @@ public class Store {
         this.address = address;
     }
 
-    public Map<String, Integer> getProducts() {
+    public Map<Product, Integer> getProducts() {
         return products;
     }
 
-    public void setProducts(Map<String, Integer> products) {
+    public void setProducts(Map<Product, Integer> products) {
         this.products = products;
     }
 
-
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (String product : getProducts().keySet()) {
+        for (Product product : getProducts().keySet()) {
             sb.append("Name: " + product + ", " + "quantity: " + getProducts().get(product));
         }
         return sb.toString();

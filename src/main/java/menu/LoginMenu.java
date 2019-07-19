@@ -27,7 +27,7 @@ public class LoginMenu extends AbstractMenu{
         System.out.println(" 0->Exit");
     }
 
-    protected void executeOption(Integer option) throws IOException {
+    public void executeOption(Integer option) throws IOException {
         LoginService loginService = new LoginService(user);
         BuyService buyService = new BuyService(store,user);
         switch (option) {
@@ -51,7 +51,7 @@ public class LoginMenu extends AbstractMenu{
                         try {
                             buyMenu.executeOption(option);
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            continue;
                         }
                     }
                 }
@@ -61,7 +61,6 @@ public class LoginMenu extends AbstractMenu{
                 break;
             case 3:
                 System.out.println("You have to login first, before start buying products!");
-
                 break;
             case 4:
                 System.out.println("You have to login first, before start buying products!");

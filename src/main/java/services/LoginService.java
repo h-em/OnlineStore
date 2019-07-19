@@ -8,13 +8,9 @@ import utils.ApplicationConst;
 import utils.TxtFileReader;
 
 import java.util.ArrayList;
-import java.util.logging.Logger;
 
 public class LoginService {
     private User user;
-    private Store store;
-    private static final Logger loger = Logger.getLogger(Logger.class.getName());
-
     public LoginService(User user) {
         this.user = user;
     }

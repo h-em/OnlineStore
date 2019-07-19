@@ -6,7 +6,7 @@ import java.util.Map;
 public class User {
     private String name;
     private String password;
-    private Map<String, Integer> productsFromCart;
+    private Map<Product, Integer> productsFromCart;
 
     public User(String name, String password) {
         this.name = name;
@@ -18,7 +18,7 @@ public class User {
         return name;
     }
 
-    public void addAndCountProduct(String productToAdd) {
+    public void addAndCountProduct(Product productToAdd) {
         Integer count = productsFromCart.get(productToAdd);
         if (count == null) {
             count = 1;
@@ -40,11 +40,11 @@ public class User {
         this.password = password;
     }
 
-    public Map<String, Integer> getProductsFromCart() {
+    public Map<Product, Integer> getProductsFromCart() {
         return productsFromCart;
     }
 
-    public void setProductsFromCart(Map<String, Integer> productsFromCart) {
+    public void setProductsFromCart(Map<Product, Integer> productsFromCart) {
         this.productsFromCart = productsFromCart;
     }
 
@@ -71,7 +71,7 @@ public class User {
 
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        for (String product : getProductsFromCart().keySet()) {
+        for (Product product : getProductsFromCart().keySet()) {
             sb.append(product + " " + "quantity: " + getProductsFromCart().get(product));
         }
         return sb.toString();

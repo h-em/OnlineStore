@@ -4,7 +4,7 @@ import model.Product;
 import model.Store;
 import model.User;
 import utils.ApplicationConst;
-import utils.LoginUtil;
+import utils.Util;
 import utils.TxtFileReader;
 import utils.TxtFileWriter;
 
@@ -31,10 +31,9 @@ public class BuyService {
     public BuyService() {
     }
 
-
     public void displayAvailableProducts() {
         System.out.println("Products:");
-        Map<Product, Integer> products = readAvailableProducts();
+        Map<Product, Integer> products = store.getProducts();
         if (products.isEmpty()) {
             System.out.println("No products in store!");
         } else {
@@ -53,7 +52,7 @@ public class BuyService {
         ArrayList<String> lines = txtFileReader.read();
         for (String line : lines) {
             String[] args = line.split(" ");
-            if (LoginUtil.isValidLine(args)) {
+            if (Util.isValidLine(args)) {
                 String name = args[0];
                 BigDecimal price = new BigDecimal(Integer.parseInt(args[2]));
                 int quantity = Integer.parseInt(args[1]);
@@ -64,25 +63,19 @@ public class BuyService {
         return products;
     }
 
-
     public void displayShopingCart() {
-
-        if (LoginUtil.isUserLogged(user)) {
-
+        if (Util.isUserLogged(user)) {
             System.out.println("User " + user.getName());
-            System.out.println("Shopping list:");
-
-            Map<String, Integer> productsFromCart = user.getProductsFromCart();
+            System.out.println("Shopping list: ");
+            Map<Product, Integer> productsFromCart = user.getProductsFromCart();
             if (productsFromCart.isEmpty()) {
                 loger.info("You don't have any products in cart!");
             } else {
-                for (String productStr : productsFromCart.keySet()) {
-                    if (LoginUtil.doesTheProductExist(productStr)) {
-                        int priceForCurrentProduct = getPriceForCurrentProduct(productStr);
-                        int totalPrice = productsFromCart.get(productStr) * priceForCurrentProduct;
-                        System.out.println("\t" + productStr + " " + productsFromCart.get(productStr)
-                                + " " + totalPrice);
-                    }
+                for (Product product : productsFromCart.keySet()) {
+                    BigDecimal priceForCurrentProduct = product.getPrice();
+                    BigDecimal totalPrice = priceForCurrentProduct.multiply(new BigDecimal(productsFromCart.get(product)));
+                    System.out.println("\t" + product.getName() + " " + productsFromCart.get(product)
+                            + " " + totalPrice);
                 }
             }
             Scanner scanner = new Scanner(System.in);
@@ -93,80 +86,68 @@ public class BuyService {
         }
     }
 
-    public int getPriceForCurrentProduct(String productName) {
-        int quantity = 0;
-        TxtFileReader txtFileReader = new TxtFileReader(ApplicationConst.FILE_PRODUCTS_PATH);
-        ArrayList<String> lines = txtFileReader.read();
-        for (String line : lines) {
-            String[] args = line.split(" ");
-            if (!LoginUtil.isValidLine(args)) continue;
-            if (args[0].equalsIgnoreCase(productName)) {
-                quantity = Integer.parseInt(args[2]);
-            }
-        }
-        return quantity;
-    }
-
-
     public void buyProduct() {
         Scanner scanner = new Scanner(System.in);
-
-        if (LoginUtil.isUserLogged(user)) {
-
+        Product newProduct = null;
+        if (Util.isUserLogged(user)) {
             boolean isValidProduct = false;
-            String productToAddStr = null;
-            while (!isValidProduct) {
-                displayAvailableProducts();
-                System.out.println("Choose a product.");
-
-                try {
-                    productToAddStr = scanner.nextLine();
-                } catch (Exception e) {
-                    continue;
-                }
-                if (store.getProducts().containsKey(productToAddStr)) {
-                    isValidProduct = true;
-                } else {
-                    System.out.println("The product does not exist!");
-                }
-            }
-
-            int numberOfItems = 0;
             boolean areEnoughItems = false;
-            while (!areEnoughItems) {
-                System.out.println("How many items do you want buy?.");
-                numberOfItems = scanner.nextInt();
-                if (LoginUtil.areEnoughItemsInStore(store, productToAddStr, numberOfItems)) {
-                    areEnoughItems = true;
-                }
-            }
+            String productToAddStr = null;
+            int numberOfItems = 0;
+            while (!isValidProduct || !areEnoughItems) {
 
-            updateAccountsFile(productToAddStr,numberOfItems);
+                displayAvailableProducts();
+
+                if (!isValidProduct) {
+                    System.out.println("Choose a product.");
+                    try {
+                        productToAddStr = scanner.nextLine();
+                        while(!productToAddStr.matches("[a-zA-Z]+")){
+                            System.out.println("Please enter a valid name!");
+                            productToAddStr = scanner.nextLine();
+                        }
+                    } catch (Exception e) {
+                        continue;
+                    }
+                }
+
+                if (!areEnoughItems) {
+                    System.out.println("How many items do you want buy?.");
+                    try {
+                        numberOfItems = scanner.nextInt();
+                    } catch (Exception e) {
+                        System.out.println("Is should be a number!");
+                        continue;
+                    }
+                }
+
+                isValidProduct = store.doesTheProductExist(productToAddStr);
+                BigDecimal priceOfProduct = store.getPrice(productToAddStr);
+                newProduct = new Product(productToAddStr, priceOfProduct);
+                areEnoughItems = Util.areEnoughItemsInStore(store, newProduct, numberOfItems);
+
+            }
+            updateAccountsFile(productToAddStr, numberOfItems);
+            updateQuantity(newProduct, numberOfItems);
 
             while (numberOfItems > 0) {
-                user.addAndCountProduct(productToAddStr);
+                user.addAndCountProduct(newProduct);
                 numberOfItems--;
             }
-
-            updateQuantity(productToAddStr, numberOfItems);
         } else {
             loger.info("You have to log first!");
         }
     }
 
-    public void updateQuantity(String productStr, Integer quantity) {
-        store.updateQuantityForAProduct(productStr, quantity);
+    private void updateQuantity(Product product, Integer quantity) {
+        store.updateQuantityForAProduct(product, quantity);
     }
 
-
     public void updateAccountsFile(String productStr, int newQuantity) {
-
         updatedDataInAuxFile(productStr, newQuantity);
         deleteOldFile(ApplicationConst.FILE_PRODUCTS_PATH);
         renameFile(ApplicationConst.FILE_PRODUCTS_PATH_AUX, ApplicationConst.FILE_PRODUCTS_PATH);
     }
-
-
 
     public void updatedDataInAuxFile(String productStr, int newQuantity) {
         //creez un fisier auxiliar pentu a scrie in el
@@ -177,10 +158,10 @@ public class BuyService {
         ArrayList<String> listOfAccounts = fileReader.read();
 
         //scriu in noul fsier toate datele din vechiul fisier + ANTITATEA actualizata
-        txtFileWriter.customWrite(listOfAccounts,productStr,newQuantity);
+        txtFileWriter.customWrite(listOfAccounts, productStr, newQuantity);
     }
 
-    public void deleteOldFile(String fileAccountsPath) {
+    private void deleteOldFile(String fileAccountsPath) {
         //sterg vechiul fisier cu date
         try {
             Files.deleteIfExists(Paths.get(fileAccountsPath));
@@ -194,7 +175,7 @@ public class BuyService {
         loger.info("Deletion successful.");
     }
 
-    public void renameFile(String fileAccountsPathAux, String fileAccountsPath) {
+    private void renameFile(String fileAccountsPathAux, String fileAccountsPath) {
         // redenumesc fisierul auxiliar cu numele fisierului original
         Path source = Paths.get(fileAccountsPathAux);
         try {
